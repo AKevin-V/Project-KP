@@ -2,7 +2,7 @@ var scriptSet = PropertiesService.getScriptProperties();
 
 // --- KONFIGURASI ---
 // Isi data rahasia di sini
-var token = "8577855118:AAERFcSp6v3YeSxr1B9DRd_e8ObFX_XfG0k"; // Token Bot Telegram
+var token = ""; // Token Bot Telegram
 var sheetID = "14GBSTVukRF7StNtKSpUIuznC24DovIKsT0UdVEMgc_A"; // ID Google Sheet
 var sheetName = "DataTiket"; // Ganti nama Sheet di bawah menjadi 'DataTiket'
 var webAppURL = "https://script.google.com/macros/s/AKfycbznLkLSowwaLK_xqoCvGure8p1pi2c4p2RWxDpzs4AYJ5WV4b_mA_0eBuUWENmjxdrFgA/exec"; // URL Web App setelah Deploy
