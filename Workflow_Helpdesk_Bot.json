@@ -1,0 +1,685 @@
+{
+  "name": "New",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}",
+        "options": {
+          "systemMessage": "=### IDENTITY\nYou are PilarBot, the virtual support assistant for CV. Pilarmedia Indonesia (ERP Logistics Vendor).\nYour persona is helpful, friendly, and professional.\nYou speak Indonesian (Bahasa Indonesia) with a natural, slightly casual tone (using \"Kak\" to address the user).\n\n### GOAL\nYour primary goal is to assist users in:\n1. Reporting ERP bugs/errors (Creating a Ticket).\n2. Checking the status of existing tickets.\n\n### REQUIRED DATA FOR TICKETING\nTo create a valid ticket, you MUST collect these 5 pieces of information.\n1. Nama Perusahaan (Company Name)\n2. Nama Pelapor (Reporter Name)\n3. Modul (Finance / Warehouse / Procurement / Sales / Others)\n4. Deskripsi Masalah (Issue Description)\n5. Link Lampiran/Foto (Attachment).\n   - Ask the user to send a **Google Drive Link** or **Image URL**.\n   - Do NOT ask them to upload the file directly to chat (Bot cannot read files yet).\n   - Tell them to type \"SKIP\" if no photo.\n\n### CONVERSATION FLOW RULES\n1. **Greeting:** Use \"Halo Kak\" only at the beginning.\n2. **Missing Info:** If the user says \"Lapor error\" but doesn't provide details, ask for the missing information one by one or two at a time.\n3. **Clarification:** If the description is too short, ask for details.\n4. **JSON TRIGGER (CRITICAL):**\n   - WHEN you have collected ALL 5 data points (including Link/SKIP), generate the JSON output inside a code block.\n   - **IMPORTANT:** If user types 'SKIP' for attachment, immediately recognize this as the 5th data point. Output the JSON.\n\n### OUTPUT FORMAT (JSON)\nSCENARIO A: Creating a New Ticket (All 5 data points collected)\n```json\n{\n  \"action\": \"create_ticket\",\n  \"data\": {\n    \"company\": \"Company Name Here\",\n    \"reporter\": \"User Name Here\",\n    \"module\": \"Selected Module\",\n    \"description\": \"Full problem description\",\n    \"attachment\": \"URL Link Here or SKIP\"\n  },\n  \"reply_text\": \"Data lengkap! Laporan sedang saya simpan ke sistem...\"\n}\n\n{\n  \"action\": \"check_status\",\n  \"data\": {\n    \"ticket_id\": \"T-XXXX\"\n  },\n  \"reply_text\": \"Sebentar ya Kak, saya cek status tiket T-XXXX...\"\n}"
+        }
+      },
+      "id": "52c6d8e5-f12d-476e-9128-38dfd08391ce",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        576,
+        320
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "132096c6-dffb-43fd-85aa-5c71ec8700b8",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        352,
+        320
+      ],
+      "webhookId": "8a369e26-2c5e-444f-b755-855d05dcad15",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "Qzk3VO78m5n4i6T2",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=  🔎 *Status Tiket Ditemukan*\n\n    🆔 ID: {{ $json[\"Ticket ID\"] }}\n\n    🏢 Perusahaan: {{ $('Get row(s) in sheet').item.json['Nama Perusahaan'] }}\n\n    🛠 Modul: {{ $('Get row(s) in sheet').item.json.Modul }}\n\n    📝 Masalah: {{ $json[\"Deskripsi Masalah\"] }}\n\n    📊 *STATUS SAAT INI:* {{ $json[\"Status\"] }}\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ea283c27-cafc-4532-8ce7-4fb51c514a27",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1968,
+        416
+      ],
+      "webhookId": "e090be52-7194-4de5-91e5-4134f16a0edd",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "Qzk3VO78m5n4i6T2",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Telegram Start \nuser to send message ai agent to work google sheet read,append or update and delete the data in sheet\n"
+      },
+      "id": "66406fc9-0516-4385-8e16-91d41fe61828",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Duplicate Not data to enter.\n"
+      },
+      "id": "63401902-f144-4fe0-bd2f-5f8101f842ed",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        768
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Schedule"
+      },
+      "id": "55410c5d-6f4f-4b22-85b9-06119fdda7cb",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        1248
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        544
+      ],
+      "id": "428fc756-3ae2-47d5-9349-fcc18cdb193d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ambil output text dari AI Agent\nconst aiOutput = $input.item.json.output || \"\"; \n\nlet parsed = null;\n\n// --- STRATEGI 1: Cari yang dibungkus ``` (Code Block) ---\n// Regex ini menangkap ```json {...} ``` ATAUPUN ``` {...} ``` (tanpa tulisan json)\nconst codeBlockRegex = /```\\w*\\s*([\\s\\S]*?)\\s*```/;\nconst match = aiOutput.match(codeBlockRegex);\n\nif (match) {\n  try {\n    parsed = JSON.parse(match[1]);\n  } catch (e) {\n    // Lanjut ke strategi 2 jika gagal\n  }\n}\n\n// --- STRATEGI 2: Cari Manual kurung kurawal { ... } ---\n// Ini untuk jaga-jaga kalau AI lupa pakai tanda ```\nif (!parsed) {\n  try {\n    const firstOpen = aiOutput.indexOf('{');\n    const lastClose = aiOutput.lastIndexOf('}');\n    \n    if (firstOpen !== -1 && lastClose !== -1) {\n      // Ambil teks dari kurung kurawal pertama sampai terakhir\n      const potentialJson = aiOutput.substring(firstOpen, lastClose + 1);\n      parsed = JSON.parse(potentialJson);\n    }\n  } catch (e) {\n    // Menyerah, ini benar-benar cuma teks biasa\n  }\n}\n\n// --- PENENTUAN HASIL AKHIR ---\nlet finalData;\n\nif (parsed && parsed.action) {\n  // SUKSES: Ditemukan JSON perintah (Create Ticket / Check Status)\n  finalData = {\n    is_action: true,               // SAKLAR UTAMA (True)\n    action_type: parsed.action,    \n    payload: parsed.data,          \n    message_to_user: parsed.reply_text \n  };\n} else {\n  // GAGAL: Anggap percakapan biasa (False)\n  finalData = { \n    is_action: false, \n    message_to_user: aiOutput // Kirim apa adanya\n  };\n}\n\nreturn finalData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        320
+      ],
+      "id": "6e35ad33-bff5-4f7a-8abe-461c5296b946",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gemini/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "gemini/gemini-2.0-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        544
+      ],
+      "id": "97d193e7-dbf1-4a92-a39f-9b2bf0f35a2c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "g32Wn79yUmuWgF1s",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1af1wMZs0DC_5silyuzjD-RWnlZ5m9gJGqg8jktvPXXE",
+          "mode": "list",
+          "cachedResultName": "Database Help Desk",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1af1wMZs0DC_5silyuzjD-RWnlZ5m9gJGqg8jktvPXXE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18pSA3niwkv7ToJWFa94ESANDs07mZM2_mqK7TBVA7Jc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nama Perusahaan": "={{ $('Switch').item.json.payload.company }}",
+            "Nama Pelapor": "={{ $('Switch').item.json.payload.reporter }}",
+            "Modul": "={{ $('Switch').item.json.payload.module }}",
+            "Link/Foto (Jika ada)": "={{ $('Switch').item.json.payload.attachment }}",
+            "Status": "OPEN",
+            "Ticket ID": "={{ $json.my_ticket_id }}",
+            "Time Stamp": "={{ $json.my_timestamp }}",
+            "Deskripsi Masalah": "={{ $('Switch').item.json.payload.description }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Time Stamp",
+              "displayName": "Time Stamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nama Perusahaan",
+              "displayName": "Nama Perusahaan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nama Pelapor",
+              "displayName": "Nama Pelapor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Modul",
+              "displayName": "Modul",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Deskripsi Masalah",
+              "displayName": "Deskripsi Masalah",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Link/Foto (Jika ada)",
+              "displayName": "Link/Foto (Jika ada)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1904,
+        208
+      ],
+      "id": "6436a20c-a71f-4ad5-aa51-48652f7f3beb",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Jogg7QS6NtBQZWwZ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d63e38a-5574-4db1-8ce0-33f21b8e56ef",
+              "name": "my_ticket_id",
+              "value": "=T-{{ Math.floor(Math.random() * 100000) }}",
+              "type": "string"
+            },
+            {
+              "id": "03a14675-760c-49a2-90ff-3e6a4eb9ecec",
+              "name": "my_timestamp",
+              "value": "={{ $now.setZone('Asia/Jakarta').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        240
+      ],
+      "id": "ab93fa45-b26c-4ba0-adec-a95810361272",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Code in JavaScript').item.json.message_to_user }}\n🎫 ID Tiket Anda: {{ $json['Ticket ID'] }}",
+        "additionalFields": {
+          "appendAttribution": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2192,
+        256
+      ],
+      "id": "d1030e1e-bc41-4525-872d-94591ddfa54d",
+      "name": "Send a text message",
+      "webhookId": "e516bba1-ba60-49eb-a2b2-cd9bc5f68eca",
+      "credentials": {
+        "telegramApi": {
+          "id": "Qzk3VO78m5n4i6T2",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action_type }}",
+                    "rightValue": "=create_ticket",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "193b082f-2007-48bd-9a67-2a2cb5174935"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "928e48ce-d0b5-4673-8967-8af5870425f3",
+                    "leftValue": "={{ $json.action_type }}",
+                    "rightValue": "=check_status",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Conversation"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        336
+      ],
+      "id": "af6e3399-5573-4d24-adc9-61a8ac46879d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1af1wMZs0DC_5silyuzjD-RWnlZ5m9gJGqg8jktvPXXE",
+          "mode": "list",
+          "cachedResultName": "Database Help Desk",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1af1wMZs0DC_5silyuzjD-RWnlZ5m9gJGqg8jktvPXXE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1af1wMZs0DC_5silyuzjD-RWnlZ5m9gJGqg8jktvPXXE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Ticket ID",
+              "lookupValue": "={{ $json.payload.ticket_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1424,
+        432
+      ],
+      "id": "02d6c17d-857d-412e-a70e-ab8183970c84",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Jogg7QS6NtBQZWwZ",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ee673821-3dd1-4614-8c3f-12a0ce7cd93b",
+              "leftValue": "={{ $json[\"Ticket ID\"] }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1648,
+        432
+      ],
+      "id": "cd0f0d84-441a-45bd-8c42-cf9583d41b6a",
+      "name": "If",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=Maaf Kak, nomor tiket *{{ $node[\"Switch\"].json.payload.ticket_id }}* tidak ditemukan di database kami. Mohon periksa kembali ya. 🙏",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1968,
+        576
+      ],
+      "id": "d4e024a4-2021-47ab-ba48-34d71f2bd978",
+      "name": "Send a text message1",
+      "webhookId": "439a9070-c129-4c0a-8434-f110ba7855bf",
+      "credentials": {
+        "telegramApi": {
+          "id": "Qzk3VO78m5n4i6T2",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $('AI Agent').item.json.output }}",
+        "additionalFields": {
+          "appendAttribution": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1456,
+        608
+      ],
+      "id": "e4eb409d-a7fd-435e-bcf0-c7d38e5fe16a",
+      "name": "Send a text message2",
+      "webhookId": "439a9070-c129-4c0a-8434-f110ba7855bf",
+      "credentials": {
+        "telegramApi": {
+          "id": "Qzk3VO78m5n4i6T2",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ad18353d-43eb-43c4-9754-ce16c1619833",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "17664c8169e7e08f34fa15df181f01f011e36af48cf2ad8f4115e9285ad4ae4a"
+  },
+  "id": "qcsWN6aUoEnJc2Oa",
+  "tags": []
+}
